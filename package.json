@@ -4,9 +4,7 @@
   "description": "AI-powered automation testing system with Spec-kit",
   "scripts": {
     "web:dev": "cd web && npm run dev",
-    "web:build": "cd web && npm run build",
-    "test": "tsx tests/runner.ts",
-    "spec": "tsx tests/spec-generator.ts"
+    "web:build": "cd web && npm run build"
   },
   "devDependencies": {
     "@types/node": "^22.5.0",

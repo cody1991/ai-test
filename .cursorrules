@@ -1,0 +1,46 @@
+# AI 测试助手规则
+
+## 当用户要求测试某个功能时
+
+遵循以下步骤：
+
+1. **读取测试规范**
+   - 文件位置：`specs/restaurant.spec.ts`
+   - 这是测试的唯一真实来源
+
+2. **理解需求并匹配**
+   - 用户说"测试订单管理" → 找 `name: '订单管理'` 的 PageSpec
+   - 用户说"测试菜单的添加功能" → 找 `name: '菜单管理'` → `name: '添加菜品'` 的 FeatureSpec
+   - 用户说"测试所有功能" → 执行所有 PageSpec
+
+3. **执行测试步骤**
+   - 使用 MCP 工具 `navigate_page` 访问页面（baseUrl: http://localhost:3000）
+   - 对每个 `action`：
+     - 调用 `take_snapshot` 获取页面元素
+     - 根据 `target` 字段（自然语言）智能定位元素
+     - 不要使用 `selector` 字段（除非 target 不存在）
+     - 执行操作（click/fill）
+     - 验证 `expected` 结果
+
+4. **报告结果**
+   - 每个测试步骤的状态（✅成功 / ❌失败）
+   - 失败原因（如果有）
+   - 截图（如果需要）
+
+## 示例
+
+用户："测试订单管理"
+
+你应该：
+```
+1. 读取 specs/restaurant.spec.ts
+2. 找到 { name: '订单管理', path: '/orders', features: [...] }
+3. 执行所有 features 中的 actions
+4. 报告结果
+```
+
+## 注意事项
+
+- **优先使用自然语言定位**：`target: "点击添加按钮"` 比 `selector: "#btn"` 更稳定
+- **智能理解语义**：AI 需要通过 take_snapshot 理解页面结构
+- **动态适配**：页面改动不影响测试，因为 AI 实时分析
