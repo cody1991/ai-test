@@ -5,9 +5,10 @@
 ## 🎯 核心特性
 
 - ✅ **自然语言驱动** - 用人话描述测试需求，AI 自动生成测试用例
+- ✅ **智能元素定位** - 不写 selector，用自然语言描述元素，AI 自动查找
 - ✅ **自然语言执行** - 用人话告诉 AI 执行哪些测试
 - ✅ **实时交互** - 测试过程中可以随时调整策略
-- ✅ **智能调试** - 遇到问题 AI 自动分析并给出解决方案
+- ✅ **零维护成本** - 页面改动不影响测试，AI 自动适配
 
 ## 📁 项目结构
 
@@ -132,30 +133,41 @@ AI 自动生成并执行覆盖所有场景的测试！
 
 ## 📖 Spec-kit 规则示例
 
+**不用写 CSS Selector！用自然语言描述操作：**
+
 ```typescript
 // specs/restaurant.spec.ts
 export const restaurantSpec = [
   {
     name: '菜单管理',
     path: '/menu',
-    description: '菜品的增删改查',
     features: [
       {
         name: '添加菜品',
-        type: 'form',
         actions: [
-          { name: '打开表单', selector: 'button:contains("添加")', expected: '弹出表单' },
-          { name: '填写名称', selector: 'input[id*="name"]', input: '测试菜品', expected: '输入成功' },
-          { name: '提交表单', selector: 'button[type="submit"]', expected: '添加成功' }
+          { name: '打开表单', target: '点击"添加菜品"按钮', expected: '弹出表单' },
+          { name: '填写名称', target: '在菜品名称输入框中输入', input: '测试菜品', expected: '输入成功' },
+          { name: '填写价格', target: '在价格输入框中输入', input: '99', expected: '输入成功' },
+          { name: '提交', target: '点击确定按钮', expected: '添加成功' }
         ],
         validations: [
-          { field: 'name', rules: ['required'], errorMessage: '请输入菜品名称' },
-          { field: 'price', rules: ['required', 'number'], errorMessage: '请输入有效价格' }
+          { field: 'name', rules: ['required'], errorMessage: '请输入菜品名称' }
         ]
       }
     ]
   }
 ];
+```
+
+**对比传统方式**：
+```typescript
+// ❌ 传统：需要写复杂的 selector
+{ selector: 'button.ant-btn-primary:contains("添加")' }
+{ selector: 'input[id*="name"][placeholder*="请输入"]' }
+
+// ✅ 智能：自然语言描述，AI 自动定位
+{ target: '点击添加按钮' }
+{ target: '在名称输入框中输入' }
 ```
 
 ## 🔧 工作流程
@@ -204,24 +216,55 @@ export const restaurantSpec = [
 
 MCP (Model Context Protocol) 是一个开放协议，让 AI 能够与浏览器交互。你无需写任何自动化代码，AI 会自动调用 MCP 工具操作浏览器。
 
-### Q2: 和 Playwright/Selenium 有什么区别？
+### Q2: 不写 selector 怎么定位元素？
 
-| 特性 | MCP 模式 | Playwright/Selenium |
-|------|----------|---------------------|
+**传统方式**（脆弱）：
+```typescript
+selector: 'button.ant-btn-primary:nth-child(2)'  // 页面一改就失效
+```
+
+**智能方式**（稳定）：
+```typescript
+target: '点击确定按钮'  // AI 实时分析页面，智能查找
+```
+
+AI 执行时会：
+1. 获取页面快照（所有元素）
+2. 理解"确定按钮"的语义
+3. 找到匹配的元素并操作
+
+**优势**：
+- ✅ 不需要学习 CSS Selector
+- ✅ 动态元素自动适配
+- ✅ 页面改动测试依然可用
+
+### Q3: 和 Playwright/Selenium 有什么区别？
+
+| 特性 | MCP 智能模式 | Playwright/Selenium |
+|------|--------------|---------------------|
 | 驱动方式 | 自然语言 | 写代码 |
+| 元素定位 | AI 智能查找 | 手写 selector |
 | 测试编写 | AI 自动生成 | 手动编写 |
 | 测试执行 | 对 AI 说一句话 | 运行命令 |
-| 灵活性 | 随时调整策略 | 需要修改代码 |
-| 学习成本 | 0（会说话就会用） | 需要学习 API |
+| 维护成本 | 几乎为零 | 页面改动需更新 |
+| 学习成本 | 0（会说话就行） | 需要学习 API |
 
 ### Q3: 如何添加新页面的测试？
 
 ```typescript
-// 1. 在 specs/restaurant.spec.ts 添加配置
+// 1. 在 specs/restaurant.spec.ts 添加配置（用自然语言）
 {
   name: '新页面',
   path: '/new-page',
-  features: [...]
+  features: [
+    {
+      name: '新功能',
+      actions: [
+        { target: '点击新按钮', expected: '...' },  // 不用写 selector！
+        { target: '在输入框中输入', input: '...', expected: '...' }
+      ]
+    }
+  ]
 }
 
 // 2. 对 AI 说
@@ -240,6 +283,55 @@ AI 会：
 - 检查网络请求
 - 查看控制台错误
 - 给出解决方案
+
+## 💡 智能化核心优势
+
+### 1. 告别 Selector 地狱
+
+**传统痛点**：
+```typescript
+// 😫 难写、难维护、容易失效
+selector: 'div.ant-modal-wrap div.ant-modal-content div.ant-modal-footer button.ant-btn-primary:nth-child(2)'
+```
+
+**智能方案**：
+```typescript
+// 😊 简单、稳定、易维护
+target: '在弹窗中点击确定按钮'
+```
+
+### 2. 动态元素自动适配
+
+**场景**：后端返回的动态 ID/Class
+
+**传统方式**：
+```typescript
+// ❌ 失效：ID 每次都变
+selector: '#item-12345'
+
+// ❌ 失效：Class 变了
+selector: '.dynamic-class-abc123'
+```
+
+**智能方式**：
+```typescript
+// ✅ AI 理解语义，自动找到元素
+target: '点击第一行的编辑按钮'
+```
+
+### 3. 零维护成本
+
+**场景**：UI 重构（按钮位置、样式改变）
+
+**传统方式**：
+```typescript
+// 需要更新所有测试的 selector 😫
+```
+
+**智能方式**：
+```typescript
+// 完全不用改！AI 自动适配 😊
+```
 
 ## 🎉 开始使用
 

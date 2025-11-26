@@ -21,7 +21,8 @@ interface TestCase {
 
 interface TestStep {
   action: string;
-  selector?: string;
+  target?: string;      // 自然语言描述
+  selector?: string;    // CSS 选择器（备选）
   input?: string;
   expected: string;
   mcpTool?: string;
@@ -148,13 +149,23 @@ function createTestCase(page: PageSpec, feature: FeatureSpec): TestCase {
   
   // 添加功能操作步骤
   for (const action of feature.actions) {
-    steps.push({
+    const step: TestStep = {
       action: action.name,
-      selector: action.selector,
-      input: action.input,
       expected: action.expected,
       mcpTool: mapActionToMCP(action.name)
-    });
+    };
+    
+    // 优先使用自然语言描述
+    if (action.target) {
+      step.target = action.target;
+      step.input = action.input;
+    } else if (action.selector) {
+      // 降级使用 selector
+      step.selector = action.selector;
+      step.input = action.input;
+    }
+    
+    steps.push(step);
   }
   
   // 收集验证规则
@@ -210,12 +221,21 @@ export function generateMCPCommands(testCase: TestCase): string {
     
     if (step.mcpTool === 'navigate_page') {
       lines.push(`navigate_page: http://localhost:3000${getPagePath(testCase.page)}`);
-    } else if (step.mcpTool === 'click' && step.selector) {
-      lines.push(`click: ${step.selector}`);
-    } else if (step.mcpTool === 'fill' && step.selector && step.input) {
-      lines.push(`fill: ${step.selector} = "${step.input}"`);
-    } else if (step.mcpTool === 'take_snapshot') {
-      lines.push(`take_snapshot`);
+    } else if (step.target) {
+      // 使用自然语言描述（AI 实时分析页面）
+      lines.push(`AI: ${step.target}`);
+      if (step.input) {
+        lines.push(`输入内容: "${step.input}"`);
+      }
+    } else if (step.selector) {
+      // 降级使用 selector（传统方式）
+      if (step.mcpTool === 'click') {
+        lines.push(`click: ${step.selector}`);
+      } else if (step.mcpTool === 'fill' && step.input) {
+        lines.push(`fill: ${step.selector} = "${step.input}"`);
+      } else if (step.mcpTool === 'take_snapshot') {
+        lines.push(`take_snapshot`);
+      }
     }
     
     lines.push(``);
