@@ -1,32 +1,14 @@
 {
   "name": "ai-test-automation",
   "version": "1.0.0",
-  "description": "AI-powered automation testing for Italian restaurant management system",
+  "description": "AI-powered automation testing system with Spec-kit",
   "scripts": {
-    "dev": "rspack serve",
-    "build": "rspack build",
-    "test": "tsx tests/test-runner.ts",
-    "analyze": "tsx tests/ai-analyzer.ts",
-    "generate-tests": "tsx tests/test-generator.ts",
-    "demo": "tsx tests/demo.ts demo",
-    "demo:mcp": "tsx tests/demo.ts mcp",
-    "demo:guide": "tsx tests/demo.ts guide",
-    "test:browser-use": "echo '请先安装: npm install browser-use'"
-  },
-  "dependencies": {
-    "react": "^18.3.1",
-    "react-dom": "^18.3.1",
-    "react-router-dom": "^6.26.0",
-    "antd": "^5.20.0",
-    "@ant-design/icons": "^5.4.0",
-    "dayjs": "^1.11.13"
+    "web:dev": "cd web && npm run dev",
+    "web:build": "cd web && npm run build",
+    "test": "tsx tests/runner.ts",
+    "spec": "tsx tests/spec-generator.ts"
   },
   "devDependencies": {
-    "@rspack/cli": "^1.1.0",
-    "@rspack/core": "^1.1.0",
-    "@types/react": "^18.3.3",
-    "@types/react-dom": "^18.3.0",
-    "typescript": "^5.5.4",
     "tsx": "^4.19.0",
     "@types/node": "^22.5.0"
   }
