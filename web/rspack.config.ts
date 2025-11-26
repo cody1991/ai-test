@@ -49,5 +49,6 @@ export default defineConfig({
     port: 3000,
     hot: true,
     open: false,
+    historyApiFallback: true, // 支持 React Router 的 BrowserRouter
   },
 });
