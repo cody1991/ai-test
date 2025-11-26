@@ -189,35 +189,39 @@ function mapActionToMCP(actionName: string): string {
 }
 
 /**
- * 将测试用例转换为可执行的 MCP 命令
+ * 将测试用例转换为 MCP 命令
  */
-export function generateMCPCommands(testCase: TestCase): string[] {
-  const commands: string[] = [];
+export function generateMCPCommands(testCase: TestCase): string {
+  const lines: string[] = [];
   
-  commands.push(`# 测试用例: ${testCase.name}`);
-  commands.push(`# 页面路径: ${getPagePath(testCase.page)}`);
-  commands.push('');
-  
-  for (const step of testCase.steps) {
-    if (step.mcpTool === 'navigate_page') {
-      commands.push(`mcp.navigate_page("http://localhost:3000${getPagePath(testCase.page)}")`);
-    } else if (step.mcpTool === 'click' && step.selector) {
-      commands.push(`mcp.click("${step.selector}")`);
-    } else if (step.mcpTool === 'fill' && step.selector && step.input) {
-      commands.push(`mcp.fill("${step.selector}", "${step.input}")`);
-    } else {
-      commands.push(`mcp.take_snapshot()`);
-    }
-    commands.push(`# 预期: ${step.expected}`);
-    commands.push('');
-  }
+  lines.push(`# ${testCase.name}`);
+  lines.push(`# 页面: ${testCase.page}`);
+  lines.push(`# 功能: ${testCase.feature}`);
+  lines.push(``);
   
   if (testCase.validations.length > 0) {
-    commands.push('# 验证规则:');
-    testCase.validations.forEach(v => commands.push(`# - ${v}`));
+    lines.push(`# 验证规则:`);
+    testCase.validations.forEach(v => lines.push(`# - ${v}`));
+    lines.push(``);
   }
   
-  return commands;
+  for (const step of testCase.steps) {
+    lines.push(`# ${step.action} - 预期: ${step.expected}`);
+    
+    if (step.mcpTool === 'navigate_page') {
+      lines.push(`navigate_page: http://localhost:3000${getPagePath(testCase.page)}`);
+    } else if (step.mcpTool === 'click' && step.selector) {
+      lines.push(`click: ${step.selector}`);
+    } else if (step.mcpTool === 'fill' && step.selector && step.input) {
+      lines.push(`fill: ${step.selector} = "${step.input}"`);
+    } else if (step.mcpTool === 'take_snapshot') {
+      lines.push(`take_snapshot`);
+    }
+    
+    lines.push(``);
+  }
+  
+  return lines.join('\n');
 }
 
 /**
@@ -242,14 +246,15 @@ export async function saveTestCases(testCases: TestCase[]): Promise<void> {
   const jsonPath = path.join(outputDir, 'test-cases.json');
   await fs.writeFile(jsonPath, JSON.stringify(testCases, null, 2));
   
-  // 保存可执行脚本
+  // 保存 MCP 命令文件
   for (const testCase of testCases) {
-    const commands = generateMCPCommands(testCase);
-    const scriptPath = path.join(outputDir, `${testCase.id}.mcp.txt`);
-    await fs.writeFile(scriptPath, commands.join('\n'));
+    const mcpCommands = generateMCPCommands(testCase);
+    const mcpPath = path.join(outputDir, `${testCase.id}.mcp.txt`);
+    await fs.writeFile(mcpPath, mcpCommands);
   }
   
   console.log(`\n💾 测试用例已保存到: ${outputDir}`);
+  console.log(`📝 生成了 ${testCases.length} 个 MCP 命令文件`);
 }
 
 /**
@@ -287,7 +292,7 @@ async function main() {
     console.log('\n📝 下一步:');
     console.log('   1. 查看生成的测试用例: cat tests/generated/test-cases.json');
     console.log('   2. 运行测试: npm test');
-    console.log('   3. 或使用 MCP 工具手动执行: tests/generated/*.mcp.txt\n');
+    console.log('   3. 或在 IDE 中发送: "请使用 MCP 工具执行 tests/generated/ 中的所有测试用例"\n');
   }
 }
 
